@@ -10,15 +10,15 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
-| Repo | (điền link repo DAY12-...) |
+| Họ và tên | Nguyễn Thị Phương |
+| Mã học viên | 2A202601315 |
+| Repo | https://github.com/phuongphuongnguyen/K3-DAY12-2A202601315-NguyenThiPhuong |
 
 ## Service
 
 | Mục | Nội dung |
 |-----|----------|
-| Public URL | day12-agent-production-965e.up.railway.app |
+| Public URL | https://day12-agent-production-4dea.up.railway.app |
 | Platform | Railway |
 | Ngày deploy | 10/08/2026|
 
@@ -30,7 +30,7 @@ Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
 |------|--------|---------|
 | `PORT` | ✅ | platform tự gán |
 | `AGENT_API_KEY` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
+| `REDIS_URL` | ✅ | Redis add-on của Railway, nối bằng tham chiếu `${{Redis.REDIS_URL}}` |
 | `RATE_LIMIT_PER_MINUTE` | ✅ | 10 |
 | `MONTHLY_BUDGET_USD` | ✅ | 10.0 |
 | `LOG_LEVEL` | ✅ | INFO |
@@ -73,8 +73,39 @@ done; echo
 Dán output của các lệnh trên vào đây:
 
 ```
-(điền output)
+# 1. Liveness
+$ curl -i $URL/health
+HTTP/1.1 200 OK
+{"status":"ok","service":"day12-agent","version":"1.0.0"}
+
+# 2. Readiness
+$ curl -i $URL/ready
+HTTP/1.1 200 OK
+{"status":"ready","redis":true}
+
+# 3. Không có API key
+$ curl -i -X POST $URL/ask -H "Content-Type: application/json" -d '{"question":"Hello"}'
+HTTP/1.1 401 Unauthorized
+{"detail":"invalid or missing API key"}
+
+# 4. Có API key
+$ curl -i -X POST $URL/ask -H "Content-Type: application/json" \
+    -H "X-API-Key: $AGENT_API_KEY" -H "X-User-Id: sv-test" \
+    -d '{"question":"Deploy la gi?"}'
+HTTP/1.1 200 OK
+{"answer":"Ngắn gọn: Deploy la gi phụ thuộc vào ba yếu tố — cấu hình qua biến môi
+trường, health check để orchestrator biết trạng thái, và giới hạn tài nguyên.
+(Mình đang nhớ 2 lượt trao đổi trước đó.)","user_id":"sv-test","history_length":2,
+"cost_usd":3.465e-05,"tokens":{"in":43,"out":47}}
+
+# 5. Rate limit — gọi 15 lần liên tiếp, RATE_LIMIT_PER_MINUTE=10
+$ for i in $(seq 1 15); do curl -s -o /dev/null -w "%{http_code} " ... ; done
+200 200 200 200 200 200 200 200 200 200 429 429 429 429 429
 ```
+
+Nhận xét: 10 request đầu qua được, 5 request cuối bị chặn bằng 429 — đúng hạn mức
+`RATE_LIMIT_PER_MINUTE=10`. `history_length` tăng dần qua các lượt hỏi cùng
+`X-User-Id`, chứng minh lịch sử nằm ở Redis chứ không nằm trong RAM của process.
 
 ## Ảnh Chụp Màn Hình
 
@@ -85,17 +116,4 @@ Dán output của các lệnh trên vào đây:
 
 ---
 
-## Nếu Dùng Phương Án Dự Phòng
-
-Không đăng ký được tài khoản cloud? Vẫn nộp được bài, nhưng CP5 tối đa 60% điểm:
-
-1. Đặt `LOCAL_FALLBACK=true` trong `.env`
-2. Chạy `docker compose up -d` rồi kiểm tra `docker compose ps`
-3. Chụp màn hình vào `screenshots/`
-4. Chạy `pytest tests/test_cp5.py -v` — bộ test sẽ tự chuyển sang kiểm tra
-   `http://localhost:8000`
-5. Ghi rõ lý do không deploy được vào phần dưới đây:
-
-```
-(điền lý do nếu dùng phương án dự phòng, ngược lại xóa mục này)
-```
+*Deploy thành công lên Railway nên không dùng phương án dự phòng.*
