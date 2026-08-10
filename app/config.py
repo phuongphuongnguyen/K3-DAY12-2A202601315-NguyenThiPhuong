@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     chỉ phát hiện ra khi ai đó đã gọi API miễn phí bằng khóa mặc định đó.
     Không mặc định = fail fast ngay lúc khởi động.
     """
+    port: int = 8000
+    agent_api_key: str
+    redis_url: str = "redis://localhost:6379/0"
+    rate_limit_per_minute: int = 10
+    monthly_budget_usd: float = 10.0    
+    log_level: str = "INFO"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -43,6 +49,8 @@ class Settings(BaseSettings):
     # TODO (CP1): khai báo 6 trường theo bảng trên, ví dụ:
     #     port: int = 8000
     #     agent_api_key: str
+
+
 
 
 @lru_cache(maxsize=1)
