@@ -18,9 +18,9 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Public URL | day12-agent-production-965e.up.railway.app |
+| Platform | Railway |
+| Ngày deploy | 10/08/2026|
 
 ## Biến Môi Trường Đã Set Trên Cloud
 
